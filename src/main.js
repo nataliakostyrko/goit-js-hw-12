@@ -1,9 +1,8 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-import { searchImages } from './js/pixabay-api.js';
-import { addImage } from './js/render-function.js';
-
+import { searchImages } from './js/pixabay-api';
+import { addImage } from './js/render-function';
 
 const formElem = document.querySelector('.images-form');
 const loader = document.querySelector('.loader');
@@ -11,99 +10,87 @@ const imagesList = document.querySelector('.js-images-container');
 const loadMoreButton = document.querySelector('.load-more');
 
 let currentPage = 1;
-let query = '';
+let currentQuery = '';
+const limit = 15; 
 let totalPages = 0;
 
-
-
-loadMoreButton.addEventListener('click', handleUpdate);
 formElem.addEventListener('submit', async event => {
-    event.preventDefault();
-    hideloadMoreButton();
-    imagesList.innerHTML = '';
-    showLoader();
-    
-    const query = event.target.elements.query.value.trim();
+  event.preventDefault();
+  imagesList.innerHTML = '';
+  currentQuery = event.target.elements.query.value.trim();
+  currentPage = 1;
 
-    if (!query) {
-        iziToast.error({
-            title: 'Error',
-            message: 'Please enter a search query',
-        });
-        hideLoader();
-        return;
-    }
-    
-    
-    
-    try {
-        currentPage = 1;
-        const data = await searchImages(query, currentPage);
-        if (data.hits.length > 0) {
-            addImage(data.hits);
-            totalPages = Math.ceil(data.totalHits / 15);
-            checkloadMoreButton();
-        
-        } else {
-                throw Error(
-        'Sorry, there are no images matching your search query. Please try again!'
-      );
-        }
- } catch (error) {
-        iziToast.error({
-            title: 'Error',
-            message: error.message,
-        });
-    } finally {
-         hideLoader();  
-        
- } 
-    formElem.reset();
-   
-});
+  if (!currentQuery) {
+    iziToast.error({
+      title: 'Error',
+      message: 'Please enter a search query',
+    });
+    return;
+  }
 
-async function handleUpdate() {
   showLoader();
-  hideloadMoreButton();
 
-    try {
-    currentPage += 1;
-    const data = await searchImages(query, currentPage);
+  try {
+    const data = await searchImages(currentQuery, currentPage, limit);
     if (data.hits.length > 0) {
+      totalPages = Math.ceil(data.totalHits / limit);
       addImage(data.hits);
-        checkloadMoreButton();
-     const cardHeight = document
-    .querySelector('.js-images-container')
-    .getBoundingClientRect().height;
-      window.scrollBy({ top: cardHeight * 2, behavior: 'smooth' });   
-     
-        return
-        
+      checkLoadMoreBtn();
     } else {
-        throw new Error("We're sorry, there are no more posts to load");
+      iziToast.warning({
+        title: 'Warning',
+        message: 'Sorry, there are no images matching your search query. Please try again!',
+      });
     }
   } catch (error) {
     iziToast.error({
       title: 'Error',
-      message: 'Failed to fetch images. Please try again later.',
+      message: error.message,
     });
   } finally {
     hideLoader();
   }
-}
 
+  formElem.reset();
+});
 
-  
-function checkloadMoreButton() {
-    if (totalPages > currentPage) {
-        showloadMoreButton();
+loadMoreButton.addEventListener('click', async () => {
+  currentPage += 1;
+  showLoader();
+
+  try {
+    const data = await searchImages(currentQuery, currentPage, limit);
+    if (data.hits.length > 0) {
+      addImage(data.hits);
+      checkLoadMoreBtn();
+      smoothScroll();
     } else {
-        hideloadMoreButton();
-        iziToast.error({
-            title: 'Error',
-            message: "We're sorry, but you've reached the end of search results.",
-        });
+      loadMoreButton.style.display = 'none';
+      iziToast.info({
+        title: 'Info',
+        message: "We're sorry, but you've reached the end of search results.",
+      });
     }
+  } catch (error) {
+    iziToast.error({
+      title: 'Error',
+      message: error.message,
+    });
+  } finally {
+    hideLoader();
+  }
+});
+
+function checkLoadMoreBtn() {
+  if (currentPage >= totalPages) {
+    loadMoreButton.style.display = 'none';
+    iziToast.info({
+      title: 'Info',
+      message: "We're sorry, but you've reached the end of search results.",
+    });
+  } else {
+    loadMoreButton.style.display = 'block';
+  }
 }
 
 function showLoader() {
@@ -111,17 +98,16 @@ function showLoader() {
 }
 
 function hideLoader() {
-    loader.style.display = 'none';
+  loader.style.display = 'none';
 }
 
+function smoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.js-images-container')
+    .firstElementChild.getBoundingClientRect();
 
-
-function showloadMoreButton() {
-  loadMoreButton.classList.remove('hidden');
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
-
-function hideloadMoreButton() {
-    loadMoreButton.classList.add('hidden');
-}
-
-
