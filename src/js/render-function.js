@@ -3,8 +3,12 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const imagesList = document.querySelector('.js-images-container');
 
+let lightbox = new SimpleLightbox('.gallery, a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+  });
+ 
 
-let lightbox;
 
 function imageTemplate(image) {
   return `<li class='image-gallery'>
@@ -31,9 +35,5 @@ function imagesTemplate(arr) {
 export function addImage(images) {
   const createMarkup = imagesTemplate(images);
   imagesList.insertAdjacentHTML('beforeend', createMarkup);
- let lightbox = new SimpleLightbox('.gallery, a', {
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
   lightbox.refresh();
 }
