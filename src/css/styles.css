@@ -152,9 +152,10 @@ height: 45px;
  
 }
 
-
-.hidden {
-  display: none;
+.btn-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 
@@ -178,5 +179,9 @@ height: 45px;
 }
 .load-more:hover{
   background: #6c8cff;
+}
+
+.hidden {
+  display: none;
 }
 

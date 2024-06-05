@@ -11,9 +11,9 @@ const loadMoreBtn = document.querySelector('.load-more');
 
 
 
-let currentPage;
-let currentQuery;
-let totalPages;
+let currentPage = 1;
+let currentQuery = '';
+let totalPages = 0;
 
 formElem.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -21,7 +21,7 @@ formElem.addEventListener('submit', async (event) => {
   currentPage = 1;
   imagesList.innerHTML = '';
   currentQuery = event.target.elements.query.value.trim();
-  showLoader();
+ 
 
   if (!currentQuery) {
     iziToast.error({
@@ -29,20 +29,19 @@ formElem.addEventListener('submit', async (event) => {
       message: 'Please enter a search query',
       position: 'topRight',
     });
-       hideLoader();
     return;
     
   }
 
-
+ showLoader();
   try {
-    currentPage = 1;
+   
     const data = await searchImages(currentQuery, currentPage);
     if (data.hits.length > 0) {
       totalPages = Math.ceil(data.totalHits / 15);
       addImage(data.hits);
       checkLoadMoreBtn();
-      hideLoader();
+    
     } else {
       iziToast.warning({
         title: 'Warning',
@@ -96,15 +95,18 @@ loadMoreBtn.addEventListener('click', async () => {
 
 function checkLoadMoreBtn() {
   if (currentPage >= totalPages) {
+   hideLoadMoreBtn();
+    if (totalPages > 0 && currentPage === totalPages) {
+      iziToast.info({
+        title: 'Info',
+        message: "We're sorry, but you've reached the end of search results.",
+        position: 'topRight',
+      });
+    }
+  } else {
     showLoadMoreBtn();
-    } else {
-    hideLoadMoreBtn();
-    iziToast.error({
-      position: 'topRight',
-      message: "We're sorry, but you've reached the end of search results.",
-    });
   }
-  }
+}
   
 
 
